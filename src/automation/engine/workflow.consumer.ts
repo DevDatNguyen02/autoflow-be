@@ -1,5 +1,5 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Job } from 'bullmq';
+import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
+import { Job, Queue } from 'bullmq';
 import { Logger } from '@nestjs/common';
 import { WorkflowParser } from './workflow.parser';
 import { DatabaseService } from '../../database/database.service';
@@ -13,6 +13,8 @@ export class workflowConsumer extends WorkerHost {
   constructor(
     private readonly parser: WorkflowParser,
     private readonly db: DatabaseService,
+    @InjectQueue('automation-engine')
+    private readonly automationQueue: Queue,
   ) {
     super();
   }
@@ -57,7 +59,7 @@ export class workflowConsumer extends WorkerHost {
 
     // 4. Enqueue Next Steps
     for (const step of nextSteps) {
-      await job.queue.add('execute-step', {
+      await this.automationQueue.add('execute-step', {
         workflowId,
         nodeId: step.targetNodeId,
         profileId,
