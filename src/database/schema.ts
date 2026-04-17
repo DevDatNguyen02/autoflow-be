@@ -135,3 +135,13 @@ export const events = pgTable('events', {
   properties: jsonb('properties'),
   timestamp: timestamp('timestamp').defaultNow().notNull(),
 });
+
+export const workflows = pgTable('workflows', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  graph: jsonb('graph').notNull(), // Chứa nodes và edges từ Xyflow
+  isActive: integer('is_active').default(1), // 1: Active, 0: Inactive
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
