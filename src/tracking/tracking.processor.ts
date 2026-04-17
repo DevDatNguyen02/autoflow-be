@@ -1,5 +1,5 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Job } from 'bullmq';
+import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
+import { Job, Queue } from 'bullmq';
 import { Inject } from '@nestjs/common';
 import { DATABASE_CONNECTION } from '../database/database.module';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
@@ -11,6 +11,8 @@ export class TrackingProcessor extends WorkerHost {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: NodePgDatabase<typeof schema>,
+    @InjectQueue('automation-engine')
+    private readonly automationQueue: Queue,
   ) {
     super();
   }
@@ -66,6 +68,28 @@ export class TrackingProcessor extends WorkerHost {
         campaign,
         timestamp: new Date(job.data.timestamp || Date.now()),
       });
+
+      // 3. Automation Triggering
+      // Tìm các workflow active
+      const allWorkflows = await this.db.select().from(schema.workflows).where(eq(schema.workflows.isActive, 1));
+
+      for (const wf of allWorkflows) {
+        const graph = wf.graph as any;
+        // Tìm node Trigger mà label trùng với eventName hoặc là Page View
+        const triggerNode = graph.nodes.find((n: any) => 
+          n.type === 'trigger' && 
+          (n.data.label === eventName || (eventName === 'page_view' && n.data.label === 'Page View Event'))
+        );
+
+        if (triggerNode) {
+          await this.automationQueue.add('trigger-workflow', {
+            workflowId: wf.id,
+            nodeId: triggerNode.id,
+            profileId,
+            context: { eventName, properties }
+          });
+        }
+      }
 
       return { success: true };
     } catch (error) {

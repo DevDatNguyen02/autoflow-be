@@ -6,9 +6,10 @@ import { TrackingProcessor } from './tracking.processor';
 
 @Module({
   imports: [
-    BullModule.registerQueue({
-      name: 'tracking-queue',
-    }),
+    BullModule.registerQueue(
+      { name: 'tracking-queue' },
+      { name: 'automation-engine' },
+    ),
   ],
   controllers: [TrackingController],
   providers: [TrackingService, TrackingProcessor],
