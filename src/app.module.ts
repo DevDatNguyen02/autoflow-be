@@ -6,6 +6,7 @@ import { QueueModule } from './queue/queue.module';
 import { TrackingModule } from './tracking/tracking.module';
 import { KnowledgeModule } from './knowledge/knowledge.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { AutomationModule } from './automation/automation.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     TrackingModule,
     KnowledgeModule,
     DashboardModule,
+    AutomationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
