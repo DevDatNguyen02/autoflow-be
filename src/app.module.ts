@@ -5,9 +5,16 @@ import { DatabaseModule } from './database/database.module';
 import { QueueModule } from './queue/queue.module';
 import { TrackingModule } from './tracking/tracking.module';
 import { KnowledgeModule } from './knowledge/knowledge.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
-  imports: [DatabaseModule, QueueModule, TrackingModule, KnowledgeModule],
+  imports: [
+    DatabaseModule,
+    QueueModule,
+    TrackingModule,
+    KnowledgeModule,
+    DashboardModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
