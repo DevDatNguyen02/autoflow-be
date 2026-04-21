@@ -1,6 +1,5 @@
 import {
   pgTable,
-  serial,
   text,
   timestamp,
   uuid,
@@ -141,7 +140,39 @@ export const workflows = pgTable('workflows', {
   name: text('name').notNull(),
   description: text('description'),
   graph: jsonb('graph').notNull(), // Chứa nodes và edges từ Xyflow
-  isActive: integer('is_active').default(1), // 1: Active, 0: Inactive
+  status: text('status', { enum: ['draft', 'active'] }).default('draft'), // 'draft' | 'active'
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// --- AI Chat & Feedback (Phase 7) ---
+
+export const chatSessions = pgTable('chat_sessions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  anonymousId: text('anonymous_id'),
+  needsAgent: integer('needs_agent').default(0), // 0: No, 1: Yes
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const chatMessages = pgTable('chat_messages', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  sessionId: uuid('session_id')
+    .notNull()
+    .references(() => chatSessions.id, { onDelete: 'cascade' }),
+  role: text('role').notNull(), // 'user' | 'bot'
+  content: text('content').notNull(),
+  confidenceScore: integer('confidence_score'), // 0-100
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const feedbacks = pgTable('feedbacks', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  messageId: text('message_id')
+    .notNull()
+    .references(() => chatMessages.id, { onDelete: 'cascade' }),
+  isLike: integer('is_like').notNull(), // 1: Like, 0: Dislike
+  comment: text('comment'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });
