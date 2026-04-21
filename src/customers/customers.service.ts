@@ -1,7 +1,24 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { profiles, events, chatSessions, chatMessages } from '../database/schema';
+import {
+  profiles,
+  events,
+  chatSessions,
+  chatMessages,
+  Profile,
+  Event,
+  ChatMessage,
+} from '../database/schema';
 import { eq, desc, sql } from 'drizzle-orm';
+
+interface TimelineItem {
+  type: 'event' | 'chat';
+  id: string;
+  label: string;
+  content: string;
+  timestamp: Date;
+  metadata?: Record<string, any>;
+}
 
 @Injectable()
 export class CustomersService {
@@ -27,10 +44,12 @@ export class CustomersService {
       .limit(50);
 
     // 3. Lấy 50 Chat Messages gần nhất (Nếu Profile có liên kết với anonymousId)
-    let recentChats: any[] = [];
-    if (profile.userId || profile.properties?.['anonymousId']) {
-      const anonId = profile.properties?.['anonymousId'];
-      
+    let recentChats: ChatMessage[] = [];
+    const profileProps = (profile.properties as Record<string, any>) || {};
+    
+    if (profile.userId || profileProps['anonymousId']) {
+      const anonId = profileProps['anonymousId'] as string;
+
       // Tìm các sessions của user này
       const sessions = await this.db.conn
         .select({ id: chatSessions.id })
@@ -38,7 +57,7 @@ export class CustomersService {
         .where(eq(chatSessions.anonymousId, anonId));
 
       if (sessions.length > 0) {
-        const sessionIds = sessions.map(s => s.id);
+        const sessionIds = sessions.map((s) => s.id);
         recentChats = await this.db.conn
           .select()
           .from(chatMessages)
@@ -49,17 +68,17 @@ export class CustomersService {
     }
 
     // 4. Gộp và tạo Timeline (Giới hạn 50 bản ghi gộp)
-    const timeline = [
-      ...recentEvents.map(e => ({
-        type: 'event',
+    const timeline: TimelineItem[] = [
+      ...recentEvents.map((e: Event) => ({
+        type: 'event' as const,
         id: e.id,
         label: e.eventName,
         content: `User visited ${e.url || 'website'} via ${e.source || 'direct'}`,
         timestamp: e.timestamp,
-        metadata: e.properties,
+        metadata: e.properties as Record<string, any>,
       })),
-      ...recentChats.map(c => ({
-        type: 'chat',
+      ...recentChats.map((c: ChatMessage) => ({
+        type: 'chat' as const,
         id: c.id,
         label: c.role === 'user' ? 'Customer asked' : 'AI responded',
         content: c.content,
@@ -71,7 +90,8 @@ export class CustomersService {
       .slice(0, 50);
 
     // 5. Áp dụng PII Masking (Che toàn bộ nếu không phải Admin)
-    const finalProfile = userRole === 'admin' ? profile : this.maskProfile(profile);
+    const finalProfile =
+      userRole === 'admin' ? profile : this.maskProfile(profile);
 
     return {
       profile: finalProfile,
@@ -79,11 +99,16 @@ export class CustomersService {
     };
   }
 
-  private maskProfile(profile: any) {
+  private maskProfile(profile: Profile): Partial<Profile> {
     return {
       ...profile,
       email: profile.email ? '**********' : null,
-      name: profile.name ? profile.name.split(' ').map(n => n[0] + '***').join(' ') : 'Anonymous Customer',
+      name: profile.name
+        ? profile.name
+            .split(' ')
+            .map((n) => (n[0] ? n[0] + '***' : '***'))
+            .join(' ')
+        : 'Anonymous Customer',
       // Có thể che thêm các properties nhạy cảm khác nếu cần
     };
   }

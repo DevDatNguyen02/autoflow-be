@@ -8,6 +8,7 @@ import {
   jsonb,
   index,
 } from 'drizzle-orm/pg-core';
+import { InferSelectModel } from 'drizzle-orm';
 // Import custom vector type để Drizzle hỗ trợ pgvector
 import { customType } from 'drizzle-orm/pg-core';
 import type { AdapterAccountType } from '@auth/core/adapters';
@@ -122,21 +123,28 @@ export const profiles = pgTable('profiles', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-export const events = pgTable('events', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  anonymousId: text('anonymous_id'),
-  profileId: uuid('profile_id').references(() => profiles.id, {
-    onDelete: 'cascade',
+export const events = pgTable(
+  'events',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    anonymousId: text('anonymous_id'),
+    profileId: uuid('profile_id').references(() => profiles.id, {
+      onDelete: 'cascade',
+    }),
+    eventName: text('event_name').notNull(),
+    url: text('url'),
+    source: text('source'),
+    campaign: text('campaign'),
+    properties: jsonb('properties'),
+    timestamp: timestamp('timestamp').defaultNow().notNull(),
+  },
+  (table) => ({
+    idx_events_name_profile: index('idx_events_name_profile').on(
+      table.eventName,
+      table.profileId,
+    ),
   }),
-  eventName: text('event_name').notNull(),
-  url: text('url'),
-  source: text('source'),
-  campaign: text('campaign'),
-  properties: jsonb('properties'),
-  timestamp: timestamp('timestamp').defaultNow().notNull(),
-}, (table) => ({
-  idx_events_name_profile: index('idx_events_name_profile').on(table.eventName, table.profileId),
-}));
+);
 
 export const workflows = pgTable('workflows', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -170,7 +178,6 @@ export const chatMessages = pgTable('chat_messages', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-
 export const feedbacks = pgTable('feedbacks', {
   id: uuid('id').defaultRandom().primaryKey(),
   messageId: text('message_id')
@@ -191,3 +198,8 @@ export const customerSegments = pgTable('customer_segments', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+export type Profile = InferSelectModel<typeof profiles>;
+export type Event = InferSelectModel<typeof events>;
+export type ChatMessage = InferSelectModel<typeof chatMessages>;
+export type ChatSession = InferSelectModel<typeof chatSessions>;
