@@ -6,6 +6,7 @@ import {
   integer,
   primaryKey,
   jsonb,
+  index,
 } from 'drizzle-orm/pg-core';
 // Import custom vector type để Drizzle hỗ trợ pgvector
 import { customType } from 'drizzle-orm/pg-core';
@@ -133,7 +134,9 @@ export const events = pgTable('events', {
   campaign: text('campaign'),
   properties: jsonb('properties'),
   timestamp: timestamp('timestamp').defaultNow().notNull(),
-});
+}, (table) => ({
+  idx_events_name_profile: index('idx_events_name_profile').on(table.eventName, table.profileId),
+}));
 
 export const workflows = pgTable('workflows', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -167,6 +170,7 @@ export const chatMessages = pgTable('chat_messages', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+
 export const feedbacks = pgTable('feedbacks', {
   id: uuid('id').defaultRandom().primaryKey(),
   messageId: text('message_id')
@@ -175,4 +179,15 @@ export const feedbacks = pgTable('feedbacks', {
   isLike: integer('is_like').notNull(), // 1: Like, 0: Dislike
   comment: text('comment'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// --- Customer Segmentation (Phase 8) ---
+
+export const customerSegments = pgTable('customer_segments', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  criteria: jsonb('criteria').notNull(), // { conditions: [], conjunction: 'AND' }
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

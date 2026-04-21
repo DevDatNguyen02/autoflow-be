@@ -18,4 +18,4 @@ import { DatabaseModule } from '../database/database.module';
   providers: [KnowledgeService, ChatService, KnowledgeProcessor],
   exports: [KnowledgeService, ChatService],
 })
-export class KnowledgeModule { }
+export class KnowledgeModule {}
