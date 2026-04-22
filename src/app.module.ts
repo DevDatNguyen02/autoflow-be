@@ -10,6 +10,8 @@ import { AutomationModule } from './automation/automation.module';
 import { AutomationEngineModule } from './automation/engine/automation-engine.module';
 import { SegmentsModule } from './segments/segments.module';
 import { CustomersModule } from './customers/customers.module';
+import { AuditModule } from './audit/audit.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -22,8 +24,10 @@ import { CustomersModule } from './customers/customers.module';
     AutomationEngineModule,
     SegmentsModule,
     CustomersModule,
+    AuditModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

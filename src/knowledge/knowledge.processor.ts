@@ -7,9 +7,11 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
 import { TaskType } from '@google/generative-ai';
-import pdf from 'pdf-parse';
 import * as mammoth from 'mammoth';
 import { KnowledgeJobData } from './types';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const pdf = require('pdf-parse');
 
 @Processor('knowledge-queue')
 export class KnowledgeProcessor extends WorkerHost {
@@ -38,8 +40,7 @@ export class KnowledgeProcessor extends WorkerHost {
       const buffer = Buffer.from(content, 'base64');
 
       if (contentType === 'pdf') {
-        // Casting through unknown to avoid "error typed" issues if types are misaligned
-        const data = (await (pdf as unknown as (b: Buffer) => Promise<{ text: string }>)(buffer));
+        const data = await pdf(buffer);
         rawText = data.text;
       } else if (contentType === 'docx') {
         const result = await mammoth.extractRawText({ buffer });

@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { DatabaseService } from '../database/database.service';
-import { knowledgeDocuments, profiles } from '../database/schema';
-import { desc, sql } from 'drizzle-orm';
+import { knowledgeDocuments } from '../database/schema';
+import { desc } from 'drizzle-orm';
 
 @Injectable()
 export class KnowledgeService {

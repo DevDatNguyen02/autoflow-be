@@ -11,7 +11,7 @@ import {
 } from '../database/schema';
 import { eq, desc, sql } from 'drizzle-orm';
 
-interface TimelineItem {
+export interface TimelineItem {
   type: 'event' | 'chat';
   id: string;
   label: string;
@@ -46,7 +46,7 @@ export class CustomersService {
     // 3. Lấy 50 Chat Messages gần nhất (Nếu Profile có liên kết với anonymousId)
     let recentChats: ChatMessage[] = [];
     const profileProps = (profile.properties as Record<string, any>) || {};
-    
+
     if (profile.userId || profileProps['anonymousId']) {
       const anonId = profileProps['anonymousId'] as string;
 

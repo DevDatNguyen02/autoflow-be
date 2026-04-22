@@ -3,7 +3,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { DatabaseService } from '../database/database.service';
 import { profiles, events } from '../database/schema';
-import { desc, sql } from 'drizzle-orm';
+import { desc } from 'drizzle-orm';
 
 @Injectable()
 export class TrackingService {

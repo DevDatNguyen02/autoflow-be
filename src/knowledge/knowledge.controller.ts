@@ -87,7 +87,9 @@ export class KnowledgeController {
 
   @Post('stats/feedback')
   async getFeedbackStats() {
-    const total = await this.db.select({ count: sql`count(*)` }).from(schema.feedbacks);
+    const total = await this.db
+      .select({ count: sql`count(*)` })
+      .from(schema.feedbacks);
     const likes = await this.db
       .select({ count: sql`count(*)` })
       .from(schema.feedbacks)
@@ -101,7 +103,9 @@ export class KnowledgeController {
       total: Number(total[0].count),
       likes: Number(likes[0].count),
       dislikes: Number(dislikes[0].count),
-      dislikeRate: total[0].count ? (Number(dislikes[0].count) / Number(total[0].count)) * 100 : 0,
+      dislikeRate: total[0].count
+        ? (Number(dislikes[0].count) / Number(total[0].count)) * 100
+        : 0,
     };
   }
 }

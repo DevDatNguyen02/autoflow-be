@@ -51,14 +51,11 @@ export class ChatService {
     // 0. Khởi tạo/Lấy session và lưu tin nhắn user
     const finalSessionId = await this.getOrCreateSession(sessionId);
 
-    const [userMsg] = await this.db
-      .insert(schema.chatMessages)
-      .values({
-        sessionId: finalSessionId,
-        role: 'user',
-        content: message,
-      })
-      .returning();
+    await this.db.insert(schema.chatMessages).values({
+      sessionId: finalSessionId,
+      role: 'user',
+      content: message,
+    });
 
     // 1. Tìm kiếm context
     const queryVector = await this.embeddings.embedQuery(message);
@@ -122,11 +119,23 @@ Trả lời bằng ngôn ngữ mà người dùng đang sử dụng.`;
     };
 
     // Chúng ta cần wrap stream để bắt dữ liệu cuối cùng
-    const self = this;
     async function* wrappedStream() {
       let fullContent = '';
       for await (const chunk of stream) {
-        fullContent += chunk.content;
+        // Extract text from chunk.content which could be a string or ContentBlock[]
+        const chunkText =
+          typeof chunk.content === 'string'
+            ? chunk.content
+            : Array.isArray(chunk.content)
+              ? chunk.content
+                  .map((c: any) =>
+                    typeof c === 'string'
+                      ? c
+                      : (c as { text?: string }).text || '',
+                  )
+                  .join('')
+              : '';
+        fullContent += chunkText;
         yield chunk;
       }
       // Thêm thông báo handoff vào cuối stream nếu có
@@ -144,12 +153,24 @@ Trả lời bằng ngôn ngữ mà người dùng đang sử dụng.`;
   }
 
   async chat(message: string) {
-    // Giữ nguyên hàm chat gốc hoặc cập nhật nếu cần, 
+    // Giữ nguyên hàm chat gốc hoặc cập nhật nếu cần,
     // nhưng hiện tại FE chủ yếu dùng chatStream
     const { stream } = await this.chatStream(message);
     let fullText = '';
     for await (const chunk of stream) {
-      fullText += chunk.content;
+      const chunkText =
+        typeof chunk.content === 'string'
+          ? chunk.content
+          : Array.isArray(chunk.content)
+            ? chunk.content
+                .map((c: any) =>
+                  typeof c === 'string'
+                    ? c
+                    : (c as { text?: string }).text || '',
+                )
+                .join('')
+            : '';
+      fullText += chunkText;
     }
     return { answer: fullText };
   }

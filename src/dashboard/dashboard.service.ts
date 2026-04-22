@@ -40,7 +40,7 @@ export class DashboardService {
         totalUsers: userCount.value,
         totalEvents: eventCount.value,
         activeFlows: activeFlowsResult.value,
-        timeSeries: (timeSeries as any).rows || [],
+        timeSeries: (timeSeries as unknown as { rows: any[] }).rows || [],
       };
     } catch (e) {
       console.error('Error fetching dashboard overview:', e);

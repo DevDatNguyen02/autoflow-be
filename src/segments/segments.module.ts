@@ -9,4 +9,4 @@ import { DatabaseModule } from '../database/database.module';
   providers: [SegmentsService],
   exports: [SegmentsService],
 })
-export class SegmentsModule { }
+export class SegmentsModule {}

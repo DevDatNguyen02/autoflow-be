@@ -17,6 +17,6 @@ export class SegmentsController {
 
   @Post('preview')
   async previewSegment(@Body() body: any) {
-    return { data: await this.segmentsService.getSegmentPreview(body) };
+    return this.segmentsService.getSegmentPreview(body);
   }
 }

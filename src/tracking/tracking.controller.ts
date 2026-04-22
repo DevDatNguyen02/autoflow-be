@@ -1,4 +1,11 @@
-import { Controller, Post, Get, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { TrackingService } from './tracking.service';
 
 @Controller('api/v1/track')

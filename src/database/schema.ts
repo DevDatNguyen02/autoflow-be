@@ -63,8 +63,12 @@ export const users = pgTable('user', {
   email: text('email').unique(),
   emailVerified: timestamp('emailVerified', { mode: 'date' }),
   image: text('image'),
-  role: text('role').default('admin'), // Mặc định role cho dashboard
+  role: text('role').default('admin'), // 'admin' | 'marketer' | 'agent'
   password: text('password'), // Mật khẩu băm (bcrypt)
+  // --- MFA Fields ---
+  mfaEnabled: text('mfa_enabled').default('false'), // 'true' | 'false'
+  mfaSecret: text('mfa_secret'), // TOTP secret (encrypted)
+  mfaRecoveryCodes: jsonb('mfa_recovery_codes'), // Mảng các mã khôi phục đã băm
 });
 
 export const accounts = pgTable(
@@ -199,7 +203,27 @@ export const customerSegments = pgTable('customer_segments', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// --- Audit Log (Phase 10) ---
+
+export const auditLogs = pgTable(
+  'audit_logs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: text('user_id').references(() => users.id, { onDelete: 'set null' }),
+    action: text('action').notNull(), // 'login', 'login_failed', 'role_changed', etc.
+    resource: text('resource'), // 'user', 'workflow', 'document', etc.
+    resourceId: text('resource_id'),
+    metadata: jsonb('metadata'), // Dữ liệu bổ sung: { old, new, ip, ... }
+    timestamp: timestamp('timestamp').defaultNow().notNull(),
+  },
+  (table) => ({
+    idx_audit_logs_user: index('idx_audit_logs_user').on(table.userId),
+    idx_audit_logs_action: index('idx_audit_logs_action').on(table.action),
+  }),
+);
+
 export type Profile = InferSelectModel<typeof profiles>;
 export type Event = InferSelectModel<typeof events>;
 export type ChatMessage = InferSelectModel<typeof chatMessages>;
 export type ChatSession = InferSelectModel<typeof chatSessions>;
+export type AuditLog = InferSelectModel<typeof auditLogs>;
