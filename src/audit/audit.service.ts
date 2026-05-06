@@ -26,6 +26,7 @@ export type AuditAction =
   | 'segment_deleted'
   | 'knowledge_configured'
   | 'customer_viewed'
+  | 'profile_updated'
   | 'profile_deleted';
 
 export interface LogActionParams {

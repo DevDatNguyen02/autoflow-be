@@ -52,7 +52,16 @@ export class AutomationService {
     const workflow = await this.getWorkflowById(id);
     if (!workflow) throw new NotFoundException('Workflow not found');
 
-    const graph = workflow.graph as WorkflowGraph;
+    return this.dryRunWorkflowWithGraph(
+      workflow.graph as WorkflowGraph,
+      mockPayload,
+    );
+  }
+
+  dryRunWorkflowWithGraph(
+    graph: WorkflowGraph,
+    mockPayload: Record<string, any>,
+  ) {
     const trace: string[] = [];
 
     // Tìm trigger node
@@ -85,10 +94,20 @@ export class AutomationService {
           if (field) {
             const actualValue = (mockPayload as Record<string, unknown>)[field];
 
-            if (operator === 'equals') result = actualValue === value;
-            else if (operator === 'contains')
-              result = String(actualValue).includes(String(value));
-            else result = !!actualValue;
+            if (operator === 'contains') {
+              result = String(actualValue)
+                .toLowerCase()
+                .includes(String(value).toLowerCase());
+            } else if (operator === 'exists') {
+              result =
+                actualValue !== undefined &&
+                actualValue !== null &&
+                actualValue !== '';
+            } else {
+              // Mặc định là 'equals' (so sánh bằng)
+              // Chuyển cả hai về string và trim để tránh lỗi format
+              result = String(actualValue).trim() === String(value).trim();
+            }
           }
         }
 

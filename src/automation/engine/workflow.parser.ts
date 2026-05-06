@@ -20,9 +20,12 @@ export class WorkflowParser {
 
     // 3. Xử lý logic rẽ nhánh (Condition)
     if (currentNode.type === 'condition' && result !== undefined) {
-      // Giả thiết Condition node có 2 output handles: 'yes' và 'no'
-      const handle = result ? 'yes' : 'no';
-      outgoingEdges = outgoingEdges.filter((e) => e.sourceHandle === handle);
+      // Chấp nhận cả định dạng yes/no hoặc true/false
+      const handles = result ? ['yes', 'true'] : ['no', 'false'];
+      outgoingEdges = outgoingEdges.filter((e) => 
+          e.sourceHandle &&
+          handles.includes(String(e.sourceHandle).toLowerCase()),
+      );
     }
 
     // 4. Trả về thông tin các node đích
